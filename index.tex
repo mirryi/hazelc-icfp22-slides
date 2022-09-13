@@ -1,5 +1,5 @@
 % -----------------------------------------------
-\documentclass[xcolor={dvipsnames},xtable]{beamer}
+\documentclass[aspectratio=169, xcolor={dvipsnames}, xtable]{beamer}
 \usetheme{metropolis}
 
 \input{include/preamble}
@@ -77,7 +77,7 @@ Future of Programming Lab, University of Michigan}
 
 \renewcommand{\currenttitle}{Compiling holes}
 \begin{frame}{\currenttitle}
-  Indeterminate results use a separate memory representation
+  Separate memory representation for indeterminate results
   \begin{itemize}
     \item Fitted into existing runtime layouts to take advantage of garbage collector
     \item Fast heap tag check to determine if something is a value or indeterminately incomplete
@@ -134,25 +134,25 @@ Future of Programming Lab, University of Michigan}
       \hasTypeCtx{\CtxVar}{\HoleCtxVar}{\sigma}{\CtxVar'}
     }{
       \hasTypeCtx{\CtxVar}{\HoleCtxVar}{\EEHole{\SortHoleId}{\sigma}}{\TMk{\SortTypConVar}{\CNI}}
-    }{TAEHole}} \\
+    }{TAEHole}} \and
 
     \uncover<+->{\judgment{ }{
       \hasTypeCtx{\CtxVar}{\HoleCtxVar}{\ENumLit}{\TIntNC}
-    }{TANumLit}} \\
+    }{TANumLit}} \and
 
     \uncover<+->{\judgment{
       \hasTypeCtx{\CtxVar}{\HoleCtxVar}{\SortValueVar}{\TMk{\TCInt}{\CNC}} \\
       \hasTypeCtx{\CtxVar}{\HoleCtxVar}{\SortValueVar'}{\TMk{\TCInt}{\CNC}}
     }{
       \hasTypeCtx{\CtxVar}{\HoleCtxVar}{\EPlusNC{\SortValueVar}{\SortValueVar'}}{\TMk{\TCInt}{\CNC}}
-    }{TAPlusNC}} \\
+    }{TAPlusNC}} \and
 
     \uncover<+->{\judgment{
       \hasTypeCtx{\CtxVar}{\HoleCtxVar}{\SortValueVar}{\TMk{\TCInt}{\CNI}} \\
       \hasTypeCtx{\CtxVar}{\HoleCtxVar}{\SortValueVar'}{\TMk{\TCInt}{\CNI}}
     }{
       \hasTypeCtx{\CtxVar}{\HoleCtxVar}{\EPlusNC{\SortValueVar}{\SortValueVar'}}{\TMk{\TCInt}{\CNI}}
-    }{TAPlusNI}} \\
+    }{TAPlusNI}} \and
 
     \uncover<+->{\judgment{
       \hasTypeCtx{\CtxVar}{\HoleCtxVar}{\SortValueVar}{\TMk{\SortTypConVar}{\CII}} \\\\
