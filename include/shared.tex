@@ -1,0 +1,143 @@
+% Smol footnotes
+\setbeamerfont{footnote}{size=\tiny}
+
+
+% Use Fira Code for code
+\setmonofont[
+  Contextuals={Alternate},
+  Scale=MatchLowercase
+]{Fira Code}
+
+% Hyperlink style
+\hypersetup{
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+}
+\urlstyle{same}
+
+% Piece-wise uncovering of elements in TikZ pictures
+\tikzset{
+  invisible/.style={opacity=0},
+  visible on/.style={alt={#1{}{invisible}}},
+  alt/.code args={<#1>#2#3}{%
+    \alt<#1>{\pgfkeysalso{#2}}{\pgfkeysalso{#3}} % \pgfkeysalso doesn't change the path
+  },
+}
+
+% Default listing style
+\lstdefinestyle{default}{%
+  basicstyle=\ttfamily\footnotesize,
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  tabsize=1,
+  commentstyle=\color{black!60}
+}
+\lstset{style=default}
+
+\definecolor{lavender}{RGB}{162,85,162}
+
+\newcommand{\SyNEHole}[3]{\ensuremath{\textcolor{lavender}{\bm{\llparenthesis}}#1\textcolor{lavender}{\bm{\rrparenthesis}^{#2}_{#3}}}}
+\newcommand{\SyEHole}[2]{\ensuremath{\SyNEHole{}{#1}{#2}}}
+
+\newcommand{\SyTInt}{\ensuremath{\textsf{Int}}}
+\newcommand{\SyTBool}{\ensuremath{\textsf{Bool}}}
+
+\newcommand{\SyDArrow}{\ensuremath{~\Rightarrow~}}
+\newcommand{\SyNDArrow}{\ensuremath{~\nRightarrow~}}
+\newcommand{\SyArrow}{\ensuremath{~\to~}}
+\newcommand{\SyBar}{\ensuremath{\vert~}}
+\newcommand{\SyColon}{\ensuremath{~\textbf{:}~}}
+\newcommand{\SyInn}{\ensuremath{~\textbf{in}~}}
+\newcommand{\SyIn}{\ensuremath{\textbf{in}~}}
+\newcommand{\SyLet}{\ensuremath{\textbf{let}~}}
+\newcommand{\SyWith}{\ensuremath{~\textbf{with}~}}
+\newcommand{\SyWrap}{\ensuremath{\textbf{wrap}}}
+
+\newcommand{\SyCastL}{\ensuremath{\langle}}
+\newcommand{\SyCastR}{\ensuremath{\rangle}}
+
+\newcommand{\SyPlus}{\ensuremath{+}}
+\newcommand{\SyTimes}{\ensuremath{*}}
+\newcommand{\SyTrue}{\ensuremath{\textrm{true}}}
+
+\newcommand{\Indent}{\ensuremath{\hspace{10pt}}}
+
+\newcommand{\isConsistent}[2]{\ensuremath{#1 \sim #2}}
+\newcommand{\isNotConsistent}[2]{\ensuremath{#1 \nsim #2}}
+
+\newcommand{\CtxVar}{\ensuremath{\Gamma}}
+\newcommand{\HoleCtxVar}{\ensuremath{\Delta}}
+
+\newcommand{\hasType}[2]{\ensuremath{#1 : #2}}
+\newcommand{\hasTypeCtx}[4]{\ensuremath{#1, ~#2 \vdash \hasType{#3}{#4}}}
+
+\newcommand{\extendCtx}[3]{\ensuremath{#1 ; ~\hasType{#2}{#3}}}
+
+\newcommand{\rulen}[1]{~~\text{(#1)}}
+\newcommand{\judgment}[3]{\inferrule{#1}{#2}\rulen{\textsc{#3}}}
+\newcommand{\judgbox}[1]{\noindent \fbox{$#1$}}
+
+\newcommand{\pie}[2]{%
+  \begin{tikzpicture}
+    \draw (0,0) circle (#1); \fill[rotate=90] (#1,0) arc (0:#2:#1) -- (0,0) -- cycle;
+  \end{tikzpicture}%
+}
+
+\newcommand{\SyReturn}{\ensuremath{\textbf{return}~}}
+\newcommand{\SyCaseComplete}{\ensuremath{\textbf{casecomplete}~}}
+\newcommand{\SyEmbed}{\ensuremath{\textbf{emb}}}
+\newcommand{\SyProj}{\ensuremath{\textbf{proj}}}
+
+\newcommand{\SortNComplete}{\ensuremath{\textsf{Completeness}}}
+\newcommand{\SortNCompleteVar}{\ensuremath{k}}
+\newcommand{\SortComplete}{\ensuremath{\textsf{}}}
+\newcommand{\SortCompleteVar}{\ensuremath{\overline{k}}}
+\newcommand{\SortTypCon}{\ensuremath{\textsf{Type}}}
+\newcommand{\SortTypConVar}{\ensuremath{\tau}}
+\newcommand{\SortTyp}{\ensuremath{\textsf{}}}
+\newcommand{\SortTypVar}{\ensuremath{\overline{\tau}}}
+\newcommand{\SortComp}{\ensuremath{\textsf{Composite}}}
+\newcommand{\SortCompVar}{\ensuremath{c}}
+\newcommand{\SortValue}{\ensuremath{\textsf{Value}}}
+\newcommand{\SortValueVar}{\ensuremath{v}}
+\newcommand{\SortHoleId}{\ensuremath{u}}
+
+\newcommand{\CNC}{\ensuremath{\pie{0.3ex}{360}}}
+\newcommand{\CNI}{\ensuremath{\pie{0.3ex}{0}}}
+\newcommand{\CII}{\ensuremath{\pie{0.3ex}{180}}}
+
+\newcommand{\TCHole}{\ensuremath{\SyEHole{}{}}}
+\newcommand{\TCInt}{\ensuremath{\SyTInt}}
+\newcommand{\TCBool}{\ensuremath{\SyTBool}}
+
+\newcommand{\TIntNC}{\ensuremath{\TMk{\TCInt}{\CNC}}}
+\newcommand{\TBoolNC}{\ensuremath{\TMk{\TCBool}{\CNC}}}
+
+\newcommand{\TMk}[2]{\ensuremath{#1[#2]}}
+
+\newcommand{\ENumLit}{\ensuremath{\underline{n}}}
+\newcommand{\EBoolLit}{\ensuremath{\underline{b}}}
+\newcommand{\ELet}[2]{\ensuremath{\SyLet #1 = #2}}
+\newcommand{\EIn}{\ensuremath{\SyInn}}
+\newcommand{\EInn}[1]{\ensuremath{\SyIn #1}}
+\newcommand{\EReturn}[1]{\ensuremath{\SyReturn #1}}
+\newcommand{\ECaseCompleteWith}[1]{\ensuremath{\SyCaseComplete #1 \SyWith}}
+\newcommand{\ECaseCompleteBranch}[2]{\ensuremath{\SyBar #1 \SyArrow #2}}
+
+\newcommand{\EWrapIntoNI}[1]{\ensuremath{\SyWrap^{\CNI}~ #1}}
+\newcommand{\EWrapIntoII}[1]{\ensuremath{\SyWrap^{\CII}~ #1}}
+\newcommand{\EEmbedNC}[1]{\ensuremath{\SyEmbed_{\CNC}~ #1}}
+\newcommand{\EEmbedNI}[1]{\ensuremath{\SyEmbed_{\CNI}~ #1}}
+\newcommand{\EProj}[2]{\ensuremath{\SyProj[#2]~ #1}}
+
+\newcommand{\EPlusNC}[2]{\ensuremath{#1 \SyPlus_{\CNC} #2}}
+\newcommand{\EPlusNI}[2]{\ensuremath{#1 \SyPlus_{\CNI} #2}}
+\newcommand{\ETimesNC}[2]{\ensuremath{#1 \SyTimes_{\CNC} #2}}
+\newcommand{\ETimesNI}[2]{\ensuremath{#1 \SyTimes_{\CNI} #2}}
+
+\newcommand{\ETrue}{\ensuremath{\SyTrue}}
+\newcommand{\EEHole}[2]{\ensuremath{\SyEHole{#1}{#2}}}
+
+\newcommand{\EVarNamed}[2]{\ensuremath{t_{#1}^{{\color{gray}#2}}}}

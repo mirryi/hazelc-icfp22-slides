@@ -1,0 +1,228 @@
+% -----------------------------------------------
+\documentclass[xcolor={dvipsnames},xtable]{beamer}
+\usetheme{metropolis}
+
+\input{include/preamble}
+\addbibresource{references.bib}
+
+% -----------------------------------------------
+\title{Compiling Functional Programs with Holes}
+\subtitle{}
+\author{Hilbert Chen, Yanjun Chen, \textbf{Eric Zhao} \\\\
+Advisor: Cyrus Omar \\
+Future of Programming Lab, University of Michigan}
+\date{}
+
+% -----------------------------------------------
+\begin{document}
+
+\input{include/shared.tex}
+\newcommand{\currenttitle}{}
+
+\maketitle
+
+\renewcommand{\currenttitle}{Context: Hazel}
+\begin{frame}{\currenttitle}
+  \only<+->{\textbf{Hazel}\footnote{Omar et al. POPL 2017; Omar et al. POPL 2019} is a pure
+  functional programming language with \emph{typed holes} and a live programming environment}
+  %
+  \begin{itemize}
+    \item<+-> \emph{Structure editor} that ensures that \emph{all edit states} are well-formed (by
+      inserting holes where necessary)
+    \item<+-> Semantics provide both static \emph{and dynamic} meaning to all edit states
+  \end{itemize}
+  %
+  \uncover<+->{We can evaluate \emph{incomplete programs}, i.e. programs with holes!}
+\end{frame}
+
+\begin{frame}{\currenttitle}
+  \only<+->{
+    An example Hazel program:
+
+    \begin{center}
+      \includegraphics[width=0.5\linewidth]{hazel-demo-code.png}
+    \end{center}
+  }
+
+  \uncover<+->{Evaluation \emph{continues around} holes and accumulates them into an
+  \bf{indeterminate result}.}
+\end{frame}
+
+\renewcommand{\currenttitle}{Compiling holes}
+\begin{frame}{\currenttitle}
+  \only<1->{We explore compiling Hazel to a format that may be executed faster (e.g. for incomplete
+  programs with high computation)}
+  \begin{itemize}
+    \item<2-> Efficient runtime operations and representations of holes
+    \item<3-> Integration in a live programming environment
+    \item<4-> Compile to WebAssembly\footnote<4->{Haas et al. PLDI 2017} 
+      \begin{itemize}
+        \item Future integration into existing web-based Hazel UI
+        \item For now, via Grain\footnote<3->{Grain (https://grain-lang.org)}, a functional language
+          targeting WASM with low-level runtime APIs
+      \end{itemize}
+  \end{itemize}
+  %
+  \uncover<5->{More broadly, the design space of compiling holes}
+\end{frame}
+
+\renewcommand{\currenttitle}{Compiling holes}
+\begin{frame}{\currenttitle}
+  Indeterminate results are not values
+  \begin{itemize}
+    \item Need to build the result tree during runtime
+    \item Minimize overhead of dynamically checking if something is a value or indeterminate result
+  \end{itemize}
+\end{frame}
+
+\renewcommand{\currenttitle}{Compiling holes}
+\begin{frame}{\currenttitle}
+  Indeterminate results use a separate memory representation
+  \begin{itemize}
+    \item Fitted into existing runtime layouts to take advantage of garbage collector
+    \item Fast heap tag check to determine if something is a value or indeterminately incomplete
+    \item Runtime library defines how indeterminate results are accumulated
+  \end{itemize}
+\end{frame}
+
+\renewcommand{\currenttitle}{Completeness analysis}
+\begin{frame}{\currenttitle}
+  Complete (i.e. no holes) portions of a program should execute using runtime primitives
+
+  \only<+->{Perform static analysis to determine which expressions are guaranteed to be values or
+  indeterminate results at runtime}
+  \begin{itemize}
+    \item<+-> ``Necessarily complete'' $\implies$ value
+    \item<+-> ``Necessarily incomplete'' $\implies$ indeterminate result
+    \item<+-> ``Indeterminately incomplete'' $\implies$ could be either (dynamic check!)
+  \end{itemize}
+
+  \uncover<+->{This is made explicit in the type system of an internal language}
+\end{frame}
+
+\begin{frame}{\currenttitle}
+  \begin{center}
+    \[\begin{array}{rccl}
+      \SortNComplete & \SortNCompleteVar & \Coloneqq & \CNC \mid \CNI                                                                              \\
+      \SortComplete  & \SortCompleteVar  & \Coloneqq & \SortNCompleteVar \mid \CII                                                                 \\
+      \SortTypCon    & \SortTypConVar    & \Coloneqq & \TCHole \mid \TCInt \mid \TCBool \mid \cdots                                                   \\
+      \SortTyp       & \SortTypVar       & \Coloneqq & \SortTypConVar[\SortCompleteVar]                                                            \\
+      \SortValue       & \SortValueVar       & \Coloneqq & x \mid \EEHole{\SortHoleId}{\sigma}
+                                                     \mid \ENumLit \mid \EBoolLit \mid \cdots                                              \\
+      \SortComp      & \SortCompVar      & \Coloneqq & \SortValueVar 
+                                                     \mid \EPlusNC{\SortValueVar}{\SortValueVar} 
+                                                     \mid \EPlusNI{\SortValueVar}{\SortValueVar} \\
+                     &                   & \mid         & \EWrapIntoNI{\SortValueVar}
+                                                     \mid \EWrapIntoII{\SortValueVar} \\
+                     &                   & \mid         & \EEmbedNC{\SortValueVar}
+                                                     \mid \EEmbedNI{\SortValueVar}
+                                                     \mid \EProj{\SortValueVar}{\SortTypConVar} \\
+                     &                   & \mid         & \ECaseCompleteWith{\SortValueVar}
+                                                       \ECaseCompleteBranch{x}{\SortCompVar}
+                                                      ~\ECaseCompleteBranch{x'}{\SortCompVar} \\
+                     &                   & \mid         & \ELet{x}{\SortCompVar} \EIn \SortCompVar \\
+                     &                   & \mid         & \cdots
+    \end{array}\]
+  \end{center}
+\end{frame}
+
+\begin{frame}{\currenttitle}
+  \begin{mathpar}
+    \footnotesize
+    \uncover<+->{\judgment{
+      \SortHoleId :: \SortTypConVar[\CtxVar'] \in \HoleCtxVar \\
+      \hasTypeCtx{\CtxVar}{\HoleCtxVar}{\sigma}{\CtxVar'}
+    }{
+      \hasTypeCtx{\CtxVar}{\HoleCtxVar}{\EEHole{\SortHoleId}{\sigma}}{\TMk{\SortTypConVar}{\CNI}}
+    }{TAEHole}} \\
+
+    \uncover<+->{\judgment{ }{
+      \hasTypeCtx{\CtxVar}{\HoleCtxVar}{\ENumLit}{\TIntNC}
+    }{TANumLit}} \\
+
+    \uncover<+->{\judgment{
+      \hasTypeCtx{\CtxVar}{\HoleCtxVar}{\SortValueVar}{\TMk{\TCInt}{\CNC}} \\
+      \hasTypeCtx{\CtxVar}{\HoleCtxVar}{\SortValueVar'}{\TMk{\TCInt}{\CNC}}
+    }{
+      \hasTypeCtx{\CtxVar}{\HoleCtxVar}{\EPlusNC{\SortValueVar}{\SortValueVar'}}{\TMk{\TCInt}{\CNC}}
+    }{TAPlusNC}} \\
+
+    \uncover<+->{\judgment{
+      \hasTypeCtx{\CtxVar}{\HoleCtxVar}{\SortValueVar}{\TMk{\TCInt}{\CNI}} \\
+      \hasTypeCtx{\CtxVar}{\HoleCtxVar}{\SortValueVar'}{\TMk{\TCInt}{\CNI}}
+    }{
+      \hasTypeCtx{\CtxVar}{\HoleCtxVar}{\EPlusNC{\SortValueVar}{\SortValueVar'}}{\TMk{\TCInt}{\CNI}}
+    }{TAPlusNI}} \\
+
+    \uncover<+->{\judgment{
+      \hasTypeCtx{\CtxVar}{\HoleCtxVar}{\SortValueVar}{\TMk{\SortTypConVar}{\CII}} \\\\
+      \hasTypeCtx{\extendCtx{\CtxVar}{x}{\TMk{\SortTypConVar}{\CNC}}}{\HoleCtxVar}{\SortCompVar}{\SortTypVar} \\
+      \hasTypeCtx{\extendCtx{\CtxVar}{x'}{\TMk{\SortTypConVar}{\CNI}}}{\HoleCtxVar}{\SortCompVar'}{\SortTypVar}
+    }{
+      \hasTypeCtx{\CtxVar}{\HoleCtxVar}{
+        \ECaseCompleteWith{\SortValueVar}
+          \ECaseCompleteBranch{x}{\SortCompVar}
+          ~\ECaseCompleteBranch{x'}{\SortCompVar'}
+        }{\SortTypVar}
+    }{TACaseComplete}}
+  \end{mathpar}
+\end{frame}
+
+\renewcommand{\currenttitle}{Cast handling}
+\begin{frame}{\currenttitle}
+  \only<+->{For casting we use type-indexed embedding/projections\footnote{New and Ahmed, ICFP 2018}:}
+  \begin{itemize}
+    \item<+-> To hole type: wrap results in proxies with embedded type information
+    \item<+-> Away from hole type: project proxies to target type
+    \item<+-> May fail, yielding an indeterminate result of a failed cast
+  \end{itemize}
+  
+  \vspace*{-1.5em}
+  \uncover<+->{\begin{mathpar}
+    \footnotesize
+    \judgment{
+      \hasTypeCtx{\CtxVar}{\HoleCtxVar}{\SortValueVar}{\TMk{\SortTypConVar}{\CNC}}
+    }{
+      \hasTypeCtx{\CtxVar}{\HoleCtxVar}{\EEmbedNC{\SortValueVar}}{\TMk{\TCHole}{\CNI}}
+    }{TAEmbedNC} \and
+
+    \judgment{
+      \hasTypeCtx{\CtxVar}{\HoleCtxVar}{\SortValueVar}{\TMk{\SortTypConVar}{\CNI}}
+    }{
+      \hasTypeCtx{\CtxVar}{\HoleCtxVar}{\EEmbedNI{\SortValueVar}}{\TMk{\TCHole}{\CNI}}
+    }{TAEmbedNI} \and
+
+    \judgment{
+      \hasTypeCtx{\CtxVar}{\HoleCtxVar}{\SortValueVar}{\TMk{\SortTypConVar}{\CNI}}
+    }{
+      \hasTypeCtx{\CtxVar}{\HoleCtxVar}{\EProj{\SortValueVar}{\SortTypConVar'}}{\TMk{\SortTypConVar'}{\CII}}
+    }{TAProj}
+  \end{mathpar}}
+\end{frame}
+
+\renewcommand{\currenttitle}{Ongoing and future work}
+\begin{frame}{\currenttitle}
+  \only<+->{We are still exploring options for\ldots}
+  \begin{itemize}
+    \item<+-> Pattern matching
+      \begin{itemize}
+        \item Patterns may contain \emph{pattern holes}
+      \end{itemize}
+    \item<+-> Optimized casting
+      \begin{itemize}
+        \item More space-efficient casting with the coercion-based approach
+      \end{itemize}
+    \item<+-> Live environment integration
+      \begin{itemize}
+        \item Need fast compilation and execution to be worthwhile
+        \item Hand-off between evaluator and compiler
+        \item Fill-and-resume: fill in a previous compiled and executed result when user fills a
+          hole
+      \end{itemize}
+    \item<+-> Proving the compilation pipeline to be correct
+  \end{itemize}
+\end{frame}
+
+\section*{Thanks!}
+
+\end{document}
